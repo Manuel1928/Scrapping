@@ -6,6 +6,9 @@ const puppeteer = require("puppeteer");
 const app = express()
 const port = 3000
 
+
+app.listen(port, () => console.log(`App de ejemplo escuchando el puerto ${port}!`))
+
 app.get('/', (req, res) => res.send('Hola mundo!'))
 mongoose.connect(mongoUrl, { useNewUrlParser: true });
 var db = mongoose.connection;
@@ -18,9 +21,10 @@ app.get("/scrapping", function (req, res) {
 		//const browser = await puppeteer.launch({ headless: false });
 		const browser = await puppeteer.launch();
 		const page = await browser.newPage();
-		await page.goto("https://raid-codex.com/champions/#!?filter=e30%3D", [1000, "domcontentloaded" ]);
+		await page.setDefaultNavigationTimeout(0);
+		await page.goto("https://raid-codex.com/champions/#!?filter=e30%3D",{waitUntil:"domcontentloaded"});
 		await page.waitFor(2000);
-		await page.waitForSelector(parentRow,150000);
+		await page.waitForSelector(parentRow, 150000);
 		const totalChampions= await page.$eval(parentRow, el => el.childElementCount);
 	var championList = [];
 	for (var ix = 1; ix < totalChampions; ix++) {
@@ -69,14 +73,12 @@ app.get("/scrapping", function (req, res) {
 	}
 	browser.close();
 	return championList;
-	}
+	};
 	scrape().then(value => {
 		Champion.create(value, function (err, small) {
 			if (err) return handleError(err);
 		});
 		res.send(value);
 		return;
-	})
-})
-
-app.listen(port, () => console.log(`App de ejemplo escuchando el puerto ${port}!`))
+	});
+});
