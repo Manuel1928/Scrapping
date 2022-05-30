@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const mongoUrl = 'mongodb+srv://manuel:manuel@cluster0.gabq8.mongodb.net/?retryWrites=true&w=majority';
 const Champion = require("./championModel")
 const express = require('express')
