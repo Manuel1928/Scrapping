@@ -1,5 +1,6 @@
 const mongoUrl = 'mongodb+srv://manuel:manuel@cluster0.gabq8.mongodb.net/?retryWrites=true&w=majority';
 const Champion = require("./championModel")
+const mongoose = require('mongoose');
 const express = require('express')
 const puppeteer = require("puppeteer");
 const app = express()
