@@ -1,53 +1,61 @@
-const mongoUrl = 'mongodb+srv://manuel:manuel@cluster0.gabq8.mongodb.net/?retryWrites=true&w=majority';
-const Champion = require("./championModel")
-const mongoose = require('mongoose');
 const express = require('express')
-const puppeteer = require("puppeteer");
 const app = express()
 const port = 3000
+const Champion = require("./championModel")
+const mongoose = require('mongoose');
+const mongoUrl = 'mongodb+srv://manuel:manuel@cluster0.gabq8.mongodb.net/?retryWrites=true&w=majority';
 
 
-app.listen(port, () => console.log(`App de ejemplo escuchando el puerto ${port}!`))
-
-app.get('/', (req, res) => res.send('Hola mundo!'))
 mongoose.connect(mongoUrl, { useNewUrlParser: true });
 var db = mongoose.connection;
 
 !db ? console.log("Hubo un error conectandose a la base de datos") : console.log("Conexión a base de datos satisfactoria");
+app.listen(port, () => console.log(`App de ejemplo escuchando el puerto ${port}!`))
+
+app.get('/', (req, res) => res.send('Hola mundo!'))
+
+const puppeteer = require("puppeteer");
 
 app.get("/scrapping", function (req, res) {
-	const parentRow = 'body > main > champion-list > div';
 	let scrape = async () => {
 		//const browser = await puppeteer.launch({ headless: false });
 		const browser = await puppeteer.launch();
 		const page = await browser.newPage();
-		await page.setDefaultNavigationTimeout(0);
-		await page.goto("https://raid-codex.com/champions/#!?filter=e30%3D",{waitUntil:"domcontentloaded"});
-		await page.waitFor(2000);
-		await page.waitForSelector(parentRow, 150000);
+		await page.setViewport({ width: 1366, height: 768 });
+		//await page.setDefaultNavigationTimeout(0);
+		await page.goto("https://gacha.altarofgaming.com/raid-sl/champions/", [
+            1000,
+            { waitUntil: "domcontentloaded" }
+            ]);
+		const parentRow = "#gach_page_content_main > div.gach_page_content_section > div";
+		await page.waitForSelector(parentRow);
 		const totalChampions= await page.$eval(parentRow, el => el.childElementCount);
-	var championList = [];
-	for (var ix = 1; ix < totalChampions; ix++) {
-		console.log(`Process ${ix} of ${totalChampions}`);
-		let elementToClick = `body > main > champion-list > div > div:nth-child(${ix}) > a > picture > img`;
-		await page.waitForSelector(elementToClick,150000);
-		await page.click(elementToClick);
-		await page.waitFor(2000);
+	let championList = [];
+	for (var ix = 1; ix < 25; ix++) {
+		console.log(`Process ${ix} of ${24}`);
+		let elementToClick = `#gach_page_content_main > div.gach_page_content_section > div > div > a:nth-child(${ix}) > div > div > div`;
+		await page.waitForSelector(elementToClick);
+		await Promise.all([
+			page.click(elementToClick),
+			page.waitForNavigation({ waitUntil: 'networkidle2' }),
+			]);
 
 	  const result = await page.evaluate(() => {
-		let name = document.querySelector('body > main > div > div.col-12.text-center.mb-3 > h1').innerHTML;
-		let rarity = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > span').innerHTML;
-		let faction = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > a').innerHTML;
-		let type = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(5) > div:nth-child(2)').innerHTML;
-		let element = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(2) > div:nth-child(6) > div:nth-child(2)').innerHTML;
-		let health = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(3) > div > div.col-12.champion-view-characteristics > div:nth-child(1) > div:nth-child(2)').innerHTML;
-		let attack = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(3) > div > div.col-12.champion-view-characteristics > div:nth-child(2) > div:nth-child(2)').innerHTML;
-		let defense = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(3) > div > div.col-12.champion-view-characteristics > div:nth-child(3) > div:nth-child(2)').innerHTML;
-		let criticalRate = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(3) > div > div.col-12.champion-view-characteristics > div:nth-child(4) > div:nth-child(2)').innerHTML;
-		let criticalDamage = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(3) > div > div.col-12.champion-view-characteristics > div:nth-child(5) > div:nth-child(2)').innerHTML;
-		let speed = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(3) > div > div.col-12.champion-view-characteristics > div:nth-child(6) > div:nth-child(2)').innerHTML;
-		let resistance = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(3) > div > div.col-12.champion-view-characteristics > div:nth-child(7) > div:nth-child(2)').innerHTML;
-		let accuracy = document.querySelector('body > main > div > div.col-12.ng-scope > div > div:nth-child(1) > div:nth-child(3) > div > div.col-12.champion-view-characteristics > div:nth-child(8) > div:nth-child(2)').innerHTML;
+		let name = document.querySelector("#gach_page_content_header > h1")
+		.innerText;
+		console.log(name);
+	let health = document.querySelector("#gach_page_content_main > div:nth-child(1) > div > div > div > table > tbody > tr:nth-child(1) > td.aogg_box_number").innerText;
+	let attack = document.querySelector("#gach_page_content_main > div:nth-child(1) > div > div > div > table > tbody > tr:nth-child(2) > td.aogg_box_number").innerText;
+	let defense = document.querySelector("#gach_page_content_main > div:nth-child(1) > div > div > div > table > tbody > tr:nth-child(3) > td.aogg_box_number").innerText;
+	let criticalRate = document.querySelector("#gach_page_content_main > div:nth-child(1) > div > div > div > table > tbody > tr:nth-child(5) > td.aogg_box_number").innerText;
+	let criticalDamage = document.querySelector("#gach_page_content_main > div:nth-child(1) > div > div > div > table > tbody > tr:nth-child(6) > td.aogg_box_number").innerText;
+	let speed = document.querySelector("#gach_page_content_main > div:nth-child(1) > div > div > div > table > tbody > tr:nth-child(4) > td.aogg_box_number").innerText;
+	let resistance = document.querySelector("#gach_page_content_main > div:nth-child(1) > div > div > div > table > tbody > tr:nth-child(7) > td.aogg_box_number").innerText;
+	let accuracy = document.querySelector("#gach_page_content_main > div:nth-child(1) > div > div > div > table > tbody > tr:nth-child(8) > td.aogg_box_number").innerText;
+	let rarity = document.querySelector("#gach_page_content_left > div.gach_page_content_section > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(3) > a").innerText
+	let faction = document.querySelector("#gach_page_content_left > div.gach_page_content_section > div > div > div > table > tbody > tr:nth-child(4) > td:nth-child(2) > a").innerText
+	let type = document.querySelector("#gach_page_content_left > div.gach_page_content_section > div > div > div > table > tbody > tr:nth-child(3) > td:nth-child(2) > a").innerText
+	let element = document.querySelector("#gach_page_content_left > div.gach_page_content_section > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > a").innerText
 		let championModel = { 
 			name: name,
 			rarity: rarity,
@@ -71,7 +79,7 @@ app.get("/scrapping", function (req, res) {
 	championList.push(result);
 	await page.goBack([5000, "domcontetloaded"]);
 	}
-	browser.close();
+	//browser.close();
 	return championList;
 	};
 	scrape().then(value => {
