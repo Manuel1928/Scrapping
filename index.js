@@ -22,7 +22,7 @@ app.get("/scrapping", function (req, res) {
 		const browser = await puppeteer.launch();
 		const page = await browser.newPage();
 		await page.setViewport({ width: 1366, height: 768 });
-		//await page.setDefaultNavigationTimeout(0);
+		await page.setDefaultNavigationTimeout(0);
 		await page.goto("https://gacha.altarofgaming.com/raid-sl/champions/", [
             1000,
             { waitUntil: "domcontentloaded" }
